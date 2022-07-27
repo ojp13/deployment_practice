@@ -8,14 +8,16 @@ const MongoDBStore = require('connect-mongodb-session')(session);
 const csrf = require('csurf');
 const flash = require('connect-flash');
 const multer = require('multer');
+const helmet = require('helmet');
 
 const errorController = require('./controllers/error');
 const shopController = require('./controllers/shop');
 const isAuth = require('./middleware/is-auth');
 const User = require('./models/user');
 
-const MONGODB_URI =
-  'mongodb://localhost:27017/shop';
+//const MONGODB_URI = `mongodb://${process.env.MONGO_DB_CLUSTER}/${process.env.MONGO_DB_DATABASE}`
+
+const MONGODB_URI = `mongodb://localhost:27017/shop`
 
 const app = express();
 const store = new MongoDBStore({
@@ -23,6 +25,7 @@ const store = new MongoDBStore({
   collection: 'sessions'
 });
 const csrfProtection = csrf();
+app.use(helmet());
 
 const fileStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -121,7 +124,7 @@ app.use((error, req, res, next) => {
 mongoose
   .connect(MONGODB_URI)
   .then(result => {
-    app.listen(3000);
+    app.listen(process.env.PORT || 3000);
   })
   .catch(err => {
     console.log(err);
