@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -9,11 +10,18 @@ const csrf = require('csurf');
 const flash = require('connect-flash');
 const multer = require('multer');
 const helmet = require('helmet');
+const compression = require('compression');
+const morgan = require('morgan');
 
 const errorController = require('./controllers/error');
 const shopController = require('./controllers/shop');
 const isAuth = require('./middleware/is-auth');
 const User = require('./models/user');
+
+const accessLogStream = fs.createWriteStream(
+  path.join(__dirname, 'access.log'), 
+  {flags: 'a'}
+);
 
 //const MONGODB_URI = `mongodb://${process.env.MONGO_DB_CLUSTER}/${process.env.MONGO_DB_DATABASE}`
 
@@ -25,7 +33,12 @@ const store = new MongoDBStore({
   collection: 'sessions'
 });
 const csrfProtection = csrf();
+
 app.use(helmet());
+app.use(compression());
+app.use(morgan('combined', {
+  stream: accessLogStream
+}));
 
 const fileStorage = multer.diskStorage({
   destination: (req, file, cb) => {
